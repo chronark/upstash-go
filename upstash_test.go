@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAppendSuccess(t *testing.T) {
+func TestAppend(t *testing.T) {
 	key := uuid.NewString()
 	value := uuid.NewString()
 	addition := uuid.NewString()
@@ -27,20 +27,6 @@ func TestAppendSuccess(t *testing.T) {
 	got, err := u.Get(key)
 	require.NoError(t, err)
 	require.Equal(t, fmt.Sprintf("%s%s", value, addition), got)
-}
-
-func TestAppendFailure(t *testing.T) {
-	key := uuid.NewString()
-	value := uuid.NewString()
-	u, _ := upstash.New(upstash.Options{})
-
-	length, err := u.Append(key, value)
-	require.NoError(t, err)
-	require.Equal(t, 36, length)
-
-	got, err := u.Get(key)
-	require.NoError(t, err)
-	require.Equal(t, value, got)
 }
 
 func TestDecr(t *testing.T) {
@@ -82,6 +68,20 @@ func TestGet(t *testing.T) {
 	got, err := u.Get(key)
 	require.NoError(t, err)
 	require.Equal(t, value, got)
+}
+
+func TestGetWithEmptyKey(t *testing.T) {
+	u, _ := upstash.New(upstash.Options{})
+	got, err := u.Get("")
+	require.NoError(t, err)
+	require.Equal(t, "", got)
+}
+
+func TestGetWithNonExistentKey(t *testing.T) {
+	u, _ := upstash.New(upstash.Options{})
+	got, err := u.Get(uuid.NewString())
+	require.NoError(t, err)
+	require.Equal(t, "", got)
 }
 
 func TestGetRange(t *testing.T) {
@@ -217,6 +217,22 @@ func TestMSetNX(t *testing.T) {
 
 	require.Equal(t, value2, got2)
 }
+
+func TestMSetNXWithExistingKeys(t *testing.T) {
+	key1 := uuid.NewString()
+	key2 := uuid.NewString()
+	value1 := uuid.NewString()
+	value2 := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.Set(key1, value1)
+	require.NoError(t, err)
+
+	allSet, err := u.MSetNX([]upstash.KV{{Key: key1, Value: value1}, {Key: key2, Value: value2}})
+	require.NoError(t, err)
+	require.Equal(t, 0, allSet)
+
+}
 func TestPSetEX(t *testing.T) {
 	key := uuid.NewString()
 	value := uuid.NewString()
@@ -266,6 +282,31 @@ func TestSetEX(t *testing.T) {
 	got2, err := u.Get(key)
 	require.NoError(t, err)
 	require.Equal(t, "", got2)
+}
+
+func TestSetNX(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	set, err := u.SetNX(key, value)
+	require.NoError(t, err)
+	require.Equal(t, 1, set)
+
+}
+
+func TestSetNXWithExistingKey(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.Set(key, value)
+	require.NoError(t, err)
+
+	set, err := u.SetNX(key, value)
+	require.NoError(t, err)
+	require.Equal(t, 0, set)
+
 }
 
 func TestSetRange(t *testing.T) {

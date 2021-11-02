@@ -115,28 +115,6 @@ func (u *Upstash) Get(key string) (string, error) {
 	return res.(string), nil
 }
 
-// Get the value of key and delete the key. This command is similar to GET,
-// except for the fact that it also deletes the key on success (if and only
-// if the key's value type is a string).
-//
-//Returns the value of key, empty string when key does not exist, or an
-// error if the key's value type isn't a string.
-//
-// https://redis.io/commands/getdel
-func (u *Upstash) GetDel(key string) (string, error) {
-	res, err := u.client.Call(client.Request{
-		Body: []string{"getdel", key},
-	})
-	if err != nil {
-		return "", err
-	}
-	if res == nil {
-		return "", nil
-	}
-
-	return res.(string), nil
-}
-
 // Get the value of key and optionally set its expiration. GETEX is similar
 //  to GET, but is a write command with additional options.
 //
@@ -368,6 +346,9 @@ func (u *Upstash) MSetNX(kvPairs []KV) (int, error) {
 	res, err := u.client.Call(client.Request{
 		Body: body,
 	})
+	if res == nil {
+		return 0, nil
+	}
 	return int(res.(float64)), err
 }
 
