@@ -7,15 +7,15 @@ on:
 jobs:
   tests:
     name: Tests
-    
+
     runs-on: ubuntu-latest
     strategy:
-        matrix:
-          go: ["1.16", "1.15", "1.14", "1.13"]
+      matrix:
+        go: ["1.16", "1.15", "1.14", "1.13"]
     env:
       UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
-          
+
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2.1.3
@@ -49,7 +49,23 @@ jobs:
       - name: Tests
         timeout-minutes: 10
         run: go test -v ./...
-        
-      - name: Flush db
-        if: always()
+
+  cleanup:
+    name: Flush Database
+
+    runs-on: ubuntu-latest
+    needs: [tests]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2.1.3
+        with:
+          go-version: 0.16
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2.3.3
+
+      - name: Flush Database
         run: go run ./cmd/flush
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
