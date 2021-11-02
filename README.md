@@ -21,8 +21,6 @@ import (
 )
 
 func main() {
-
-
     // Get your url and token from https://console.upstash.com/redis/{id}
     // Or leave empty to load from environment variables
     options := upstash.Options{
