@@ -115,42 +115,6 @@ func (u *Upstash) Get(key string) (string, error) {
 	return res.(string), nil
 }
 
-// Get the value of key and optionally set its expiration. GETEX is similar
-//  to GET, but is a write command with additional options.
-//
-// Returns the value of `key`, or empty string when `key` does not exist
-//
-// https://redis.io/commands/getex
-func (u *Upstash) GetEX(key string, options GetEXOptions) (string, error) {
-	body := []string{"getdel", key}
-	if options.EX != 0 {
-		body = append(body, "ex", fmt.Sprintf("%d", options.EX))
-	} else if options.EXAT != 0 {
-		body = append(body, "exat", fmt.Sprintf("%d", options.EXAT))
-
-	} else if options.PX != 0 {
-		body = append(body, "px", fmt.Sprintf("%d", options.PX))
-
-	} else if options.PXAT != 0 {
-		body = append(body, "pxat", fmt.Sprintf("%d", options.PXAT))
-
-	} else if options.PERSIST {
-		body = append(body, "persist")
-	}
-
-	res, err := u.client.Call(client.Request{
-		Body: body,
-	})
-	if err != nil {
-		return "", err
-	}
-	if res == nil {
-		return "", nil
-	}
-
-	return res.(string), nil
-}
-
 // Returns the substring of the string value stored at key, determined by
 // the offsets start and end (both are inclusive). Negative offsets can be
 // used in order to provide an offset starting from the end of the string.
