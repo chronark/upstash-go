@@ -14,5 +14,8 @@ jobs:
           go-version: '1.14'
       - name: Run coverage
         run: go test -race -coverprofile=coverage.out -covermode=atomic
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
