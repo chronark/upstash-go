@@ -31,6 +31,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
+
       - name: Get dependencies
         run: go mod download
 
@@ -40,10 +41,10 @@ jobs:
       - name: Format
         run: test -z $(gofmt -l .)
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
+        # - name: golangci-lint
+        #   uses: golangci/golangci-lint-action@v2
+        #   with:
+        #     version: latest
 
       - name: Tests
         timeout-minutes: 10
