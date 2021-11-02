@@ -1,4 +1,4 @@
-name: Test and coverage
+name: Coverage
 
 on: [push, pull_request]
 
@@ -12,13 +12,14 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: '1.16'
-      - name: Run coverage
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+      - name: Get dependencies
+        run: go mod download
+      - name: Test
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
         env:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
       - name: Upload coverage to Codecov
         run: bash <(curl -s https://codecov.io/bash)
-        if: always()
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

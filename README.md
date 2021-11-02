@@ -1,4 +1,4 @@
-# Upstash Redis Go 
+# Upstash Redis Go
 
 An HTTP/REST based Redis client built on top of [Upstash REST API](https://docs.upstash.com/features/restapi).
 
@@ -8,8 +8,41 @@ See [the list of APIs](https://docs.upstash.com/features/restapi#rest---redis-ap
 
 ## Quick Start
 
-### Install
 
-```bash
-go get github.com/chronark/upstash-go
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/chronark/upstash-go"
+)
+
+func main() {
+	u, err := upstash.New(upstash.Options{
+		// Get your url and token from https://console.upstash.com/redis/<uuid>
+        // Or leave empty to load from environment variables
+		Url: "", // env: UPSTASH_REDIS_REST_URL
+		Token:    "", // env: UPSTASH_REDIS_REST_TOKEN
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	key := "foo"
+
+	err = u.Set(key, "bar")
+	if err != nil {
+		panic(err)
+	}
+
+	value, err := u.Get(key)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(value)
+	// -> "bar"
+
+}
+
 ```
