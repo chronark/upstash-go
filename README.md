@@ -6,6 +6,7 @@ Inspired by [The official typescript client](https://github.com/upstash/upstash-
 
 See [the list of APIs](https://docs.upstash.com/features/restapi#rest---redis-api-compatibility) supported.
 
+[![codecov](https://codecov.io/gh/chronark/upstash-go/branch/main/graph/badge.svg?token=BCNI6L3TRT)](https://codecov.io/gh/chronark/upstash-go)
 ## Quick Start
 
 
