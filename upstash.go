@@ -377,19 +377,12 @@ func (u *Upstash) Set(key string, value string) error {
 //
 // https://redis.io/commands/set
 func (u *Upstash) SetWithOptions(key string, value string, options SetOptions) error {
-	body := []string{"set", key}
+	body := []string{"set", key, value}
 	if options.EX != 0 {
 		body = append(body, "ex", fmt.Sprintf("%d", options.EX))
-	} else if options.EXAT != 0 {
-		body = append(body, "exat", fmt.Sprintf("%d", options.EXAT))
-
-	} else if options.KEEPTTL {
-		body = append(body, "keepttl")
 
 	} else if options.PX != 0 {
 		body = append(body, "px", fmt.Sprintf("%d", options.PX))
-	} else if options.PXAT != 0 {
-		body = append(body, "pxat", fmt.Sprintf("%d", options.PXAT))
 	}
 	if options.NX {
 		body = append(body, "nx")
@@ -397,15 +390,14 @@ func (u *Upstash) SetWithOptions(key string, value string, options SetOptions) e
 		body = append(body, "xx")
 	}
 
-	if options.GET {
-		body = append(body, "get")
-
-	}
 	_, err := u.client.Call(client.Request{
 		Body: body,
 	})
-	return err
+	if err != nil {
 
+		return fmt.Errorf("Error %s: %w", body, err)
+	}
+	return nil
 }
 
 // Set key to hold the string value and set key to timeout after a given

@@ -265,6 +265,92 @@ func TestSet(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, value, got)
 }
+
+func TestSetWithOptions_EX(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.SetWithOptions(key, value, upstash.SetOptions{
+		EX: 2,
+	})
+	require.NoError(t, err)
+	got, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, value, got)
+
+	time.Sleep(5 * time.Second)
+	got2, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, "", got2)
+}
+
+func TestSetWithOptions_PX(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.SetWithOptions(key, value, upstash.SetOptions{
+		PX: 2000,
+	})
+	require.NoError(t, err)
+	got, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, value, got)
+
+	time.Sleep(5 * time.Second)
+	got2, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, "", got2)
+}
+
+func TestSetWithOptions_NX(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.SetWithOptions(key, value, upstash.SetOptions{
+		NX: true,
+	})
+	require.NoError(t, err)
+
+	err = u.SetWithOptions(key, uuid.NewString(), upstash.SetOptions{
+		NX: true,
+	})
+	require.NoError(t, err)
+	got, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, value, got)
+
+}
+
+func TestSetWithOptions_XX(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	value2 := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.SetWithOptions(key, value, upstash.SetOptions{
+		XX: true,
+	})
+	require.NoError(t, err)
+	got, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, "", got)
+
+	err = u.Set(key, value)
+	require.NoError(t, err)
+
+	err = u.SetWithOptions(key, value2, upstash.SetOptions{
+		XX: true,
+	})
+	require.NoError(t, err)
+	got2, err := u.Get(key)
+	require.NoError(t, err)
+	require.Equal(t, value2, got2)
+
+}
+
 func TestSetEX(t *testing.T) {
 	key := uuid.NewString()
 	value := uuid.NewString()
