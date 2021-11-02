@@ -17,22 +17,22 @@ type Options struct {
 	// The Upstash endpoint you want to use
 	// Defaults to `UPSTASH_REDIS_EDGE_URL` and falls back to `UPSTASH_REDIS_REST_URL`
 	// environment variables.
-	Endpoint string
+	Url string
 
 	// Requests to the Upstash API must provide an API token.
 	Token string
 }
 
 func New(options Options) (Upstash, error) {
-	if options.Endpoint == "" {
-		options.Endpoint = os.Getenv("UPSTASH_REDIS_REST_URL")
+	if options.Url == "" {
+		options.Url = os.Getenv("UPSTASH_REDIS_REST_URL")
 	}
 	if options.Token == "" {
 		options.Token = os.Getenv("UPSTASH_REDIS_REST_TOKEN")
 	}
 
 	return Upstash{
-		client: client.New(options.Endpoint, options.Token, nil),
+		client: client.New(options.Url, options.Token, nil),
 	}, nil
 }
 
@@ -450,4 +450,13 @@ func (u *Upstash) StrLen(key string) (int, error) {
 	})
 
 	return int(res.(float64)), err
+}
+
+// Delete all the keys of all the existing databases, not just the currently
+// selected one.
+func (u *Upstash) FlushAll() error {
+	_, err := u.client.Call(client.Request{
+		Body: []string{"flushall"},
+	})
+	return err
 }
