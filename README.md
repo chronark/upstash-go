@@ -7,8 +7,10 @@ Inspired by [The official typescript client](https://github.com/upstash/upstash-
 See [the list of APIs](https://docs.upstash.com/features/restapi#rest---redis-api-compatibility) supported.
 
 [![codecov](https://codecov.io/gh/chronark/upstash-go/branch/main/graph/badge.svg?token=BCNI6L3TRT)](https://codecov.io/gh/chronark/upstash-go)
+
 ## Quick Start
 
+Error handling has been omitted for better readability.
 
 ```go
 package main
@@ -19,30 +21,23 @@ import (
 )
 
 func main() {
-	u, err := upstash.New(upstash.Options{
-		// Get your url and token from https://console.upstash.com/redis/<uuid>
-        // Or leave empty to load from environment variables
-		Url: "", // env: UPSTASH_REDIS_REST_URL
-		Token:    "", // env: UPSTASH_REDIS_REST_TOKEN
-	})
-	if err != nil {
-		panic(err)
-	}
 
-	key := "foo"
 
-	err = u.Set(key, "bar")
-	if err != nil {
-		panic(err)
-	}
+    // Get your url and token from https://console.upstash.com/redis/{id}
+    // Or leave empty to load from environment variables
+    options := upstash.Options{
+        Url: "", // env: UPSTASH_REDIS_REST_URL
+        Token:    "", // env: UPSTASH_REDIS_REST_TOKEN
+    }
 
-	value, err := u.Get(key)
-	if err != nil {
-		panic(err)
-	}
+    u, _ := upstash.New(options)
 
-	fmt.Println(value)
-	// -> "bar"
+    u.Set("foo", "bar")
+
+    value, _ := u.Get("foo")
+
+    fmt.Println(value)
+    // -> "bar"
 
 }
 
