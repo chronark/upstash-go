@@ -15,15 +15,27 @@ type Upstash struct {
 type Options struct {
 
 	// The Upstash endpoint you want to use
-	// Defaults to `UPSTASH_REDIS_EDGE_URL` and falls back to `UPSTASH_REDIS_REST_URL`
-	// environment variables.
+	// Falls back to `UPSTASH_REDIS_REST_URL` environment variable.
 	Url string
+
+	// The Upstash edge url you want to use
+	// Falls back to `UPSTASH_REDIS_EDGE_URL` environment variable.
+	EdgeUrl string
 
 	// Requests to the Upstash API must provide an API token.
 	Token string
+
+	// Read requests will try to read from edge first
+	ReadFromEdge bool
 }
 
 func New(options Options) (Upstash, error) {
+
+
+	if options.EdgeUrl == "" {
+		options.EdgeUrl = os.Getenv("UPSTASH_REDIS_EDGE_URL")
+	}	
+
 	if options.Url == "" {
 		options.Url = os.Getenv("UPSTASH_REDIS_REST_URL")
 	}
@@ -32,7 +44,7 @@ func New(options Options) (Upstash, error) {
 	}
 
 	return Upstash{
-		client: client.New(options.Url, options.Token, nil),
+		client: client.New(options.Url,options.EdgeUrl, options.Token),
 	}, nil
 }
 

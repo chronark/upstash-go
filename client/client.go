@@ -31,6 +31,7 @@ type Request struct {
 
 type upstashClient struct {
 	url        string
+	edgeUrl    string
 	httpClient HTTPClient
 	token      string
 }
@@ -38,20 +39,17 @@ type upstashClient struct {
 func New(
 	// The Upstash endpoint you want to use
 	url string,
+	edgeUrl string,
 
 	// Requests to the Upstash API must provide an API token.
 	token string,
 
-	// Use a custom HTTPClient.
-	// This is mainly used for testing
-	// Omit to use the default `net/http` implementation
-	httpClient HTTPClient) Client {
-	if httpClient == nil {
-		httpClient = &http.Client{}
-	}
+) Client {
+	httpClient := &http.Client{}
 
 	return &upstashClient{
 		url,
+		edgeUrl,
 		httpClient,
 		token,
 	}
