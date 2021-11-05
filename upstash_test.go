@@ -72,9 +72,8 @@ func TestGet(t *testing.T) {
 
 func TestGetWithEmptyKey(t *testing.T) {
 	u, _ := upstash.New(upstash.Options{})
-	got, err := u.Get("")
-	require.NoError(t, err)
-	require.Equal(t, "", got)
+	_, err := u.Get("")
+	require.Error(t, err)
 }
 
 func TestGetWithNonExistentKey(t *testing.T) {

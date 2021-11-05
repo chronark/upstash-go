@@ -14,7 +14,8 @@ type HTTPClient interface {
 }
 
 type Client interface {
-	Call(req Request) (interface{}, error)
+	Read(req Request) (interface{}, error)
+	Write(req Request) (interface{}, error)
 }
 
 type Response struct {
@@ -69,13 +70,19 @@ func marshalBody(body interface{}) (io.Reader, error) {
 }
 
 // Perform a request and return its response
-func (c *upstashClient) request(path []string, body interface{}) (*http.Response, error) {
+func (c *upstashClient) request(method string, path []string, body interface{}) (interface{}, error) {
 	payload, err := marshalBody(body)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to marshal request body: %w", err)
 	}
-	url := fmt.Sprintf("%s/%s", c.url, strings.Join(path, "/"))
-	req, err := http.NewRequest("POST", url, payload)
+
+	baseUrl := c.url
+	if method == "GET" && c.edgeUrl != "" {
+		baseUrl = c.edgeUrl
+	}
+
+	url := fmt.Sprintf("%s/%s", baseUrl, strings.Join(path, "/"))
+	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to create request: %w", err)
 	}
@@ -87,6 +94,8 @@ func (c *upstashClient) request(path []string, body interface{}) (*http.Response
 	if err != nil {
 		return nil, fmt.Errorf("Unable to perform request: %w", err)
 	}
+	defer res.Body.Close()
+
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		var responseBody map[string]interface{}
 		err = json.NewDecoder(res.Body).Decode(&responseBody)
@@ -103,21 +112,8 @@ func (c *upstashClient) request(path []string, body interface{}) (*http.Response
 		return nil, fmt.Errorf("Response returned status code %d: %+v, path: %s", res.StatusCode, string(pretty), path)
 	}
 
-	return res, nil
-
-}
-
-// Call the API and unmarshal its response directly
-func (c *upstashClient) Call(req Request) (interface{}, error) {
-
-	httpResponse, err := c.request(req.Path, req.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer httpResponse.Body.Close()
-
 	var response Response
-	err = json.NewDecoder(httpResponse.Body).Decode(&response)
+	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to unmarshal response: %w", err)
 	}
@@ -125,4 +121,14 @@ func (c *upstashClient) Call(req Request) (interface{}, error) {
 		return nil, fmt.Errorf(response.Error)
 	}
 	return response.Result, nil
+
+}
+
+func (c *upstashClient) Read(req Request) (interface{}, error) {
+	return c.request("GET", req.Path, nil)
+}
+
+// Call the API and unmarshal its response directly
+func (c *upstashClient) Write(req Request) (interface{}, error) {
+	return c.request("POST", req.Path, req.Body)
 }

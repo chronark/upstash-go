@@ -31,10 +31,9 @@ type Options struct {
 
 func New(options Options) (Upstash, error) {
 
-
 	if options.EdgeUrl == "" {
 		options.EdgeUrl = os.Getenv("UPSTASH_REDIS_EDGE_URL")
-	}	
+	}
 
 	if options.Url == "" {
 		options.Url = os.Getenv("UPSTASH_REDIS_REST_URL")
@@ -44,7 +43,7 @@ func New(options Options) (Upstash, error) {
 	}
 
 	return Upstash{
-		client: client.New(options.Url,options.EdgeUrl, options.Token),
+		client: client.New(options.Url, options.EdgeUrl, options.Token),
 	}, nil
 }
 
@@ -62,7 +61,7 @@ type Response struct {
 // https://redis.io/commands/append
 func (u *Upstash) Append(key string, value string) (int, error) {
 
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"append", key, value},
 	})
 	return int(res.(float64)), err
@@ -80,7 +79,7 @@ func (u *Upstash) Append(key string, value string) (int, error) {
 // https://redis.io/commands/decr
 func (u *Upstash) Decr(key string) (int, error) {
 
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"decr", key},
 	})
 	return int(res.(float64)), err
@@ -99,7 +98,7 @@ func (u *Upstash) Decr(key string) (int, error) {
 // https://redis.io/commands/decrby
 func (u *Upstash) DecrBy(key string, decrement int) (int, error) {
 
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"decrby", key, fmt.Sprintf("%d", decrement)},
 	})
 	return int(res.(float64)), err
@@ -114,8 +113,8 @@ func (u *Upstash) DecrBy(key string, decrement int) (int, error) {
 // https://redis.io/commands/get
 func (u *Upstash) Get(key string) (string, error) {
 
-	res, err := u.client.Call(client.Request{
-		Body: []string{"get", key},
+	res, err := u.client.Read(client.Request{
+		Path: []string{"get", key},
 	})
 	if err != nil {
 		return "", err
@@ -141,8 +140,8 @@ func (u *Upstash) Get(key string) (string, error) {
 // https://redis.io/commands/getrange
 func (u *Upstash) GetRange(key string, start int, end int) (string, error) {
 
-	res, err := u.client.Call(client.Request{
-		Body: []string{"getrange", key, fmt.Sprintf("%d", start), fmt.Sprintf("%d", end)},
+	res, err := u.client.Read(client.Request{
+		Path: []string{"getrange", key, fmt.Sprintf("%d", start), fmt.Sprintf("%d", end)},
 	})
 	if err != nil {
 		return "", err
@@ -160,7 +159,7 @@ func (u *Upstash) GetRange(key string, start int, end int) (string, error) {
 //
 // https://redis.io/commands/getset
 func (u *Upstash) GetSet(key string, value string) (string, error) {
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"getset", key, value},
 	})
 	if err != nil {
@@ -189,7 +188,7 @@ func (u *Upstash) GetSet(key string, value string) (string, error) {
 // https://redis.io/commands/incr
 func (u *Upstash) Incr(key string) (int, error) {
 
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"incr", key},
 	})
 	return int(res.(float64)), err
@@ -207,7 +206,7 @@ func (u *Upstash) Incr(key string) (int, error) {
 //
 // https://redis.io/commands/incrby
 func (u *Upstash) IncrBy(key string, increment int) (int, error) {
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"incrby", key, fmt.Sprintf("%d", increment)},
 	})
 	return int(res.(float64)), err
@@ -241,7 +240,7 @@ func (u *Upstash) IncrBy(key string, increment int) (int, error) {
 //
 //https://redis.io/commands/incrbyfloat
 func (u *Upstash) IncrByFloat(key string, increment float64) (float64, error) {
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"incrbyfloat", key, fmt.Sprintf("%f", increment)},
 	})
 	if err != nil {
@@ -263,8 +262,8 @@ func (u *Upstash) IncrByFloat(key string, increment float64) (float64, error) {
 //
 // https://redis.io/commands/mget
 func (u *Upstash) MGet(keys []string) ([]string, error) {
-	res, err := u.client.Call(client.Request{
-		Body: append([]string{"mget"}, keys...),
+	res, err := u.client.Read(client.Request{
+		Path: append([]string{"mget"}, keys...),
 	})
 
 	values := make([]string, len(keys))
@@ -291,7 +290,7 @@ func (u *Upstash) MSet(kvPairs []KV) error {
 		body = append(body, kv.Key, kv.Value)
 	}
 
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: body,
 	})
 	return err
@@ -319,7 +318,7 @@ func (u *Upstash) MSetNX(kvPairs []KV) (int, error) {
 		body = append(body, kv.Key, kv.Value)
 	}
 
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: body,
 	})
 	if res == nil {
@@ -331,7 +330,7 @@ func (u *Upstash) MSetNX(kvPairs []KV) (int, error) {
 // PSETEX works exactly like SETEX with the sole difference that the expire
 // time is specified in milliseconds instead of seconds.
 func (u *Upstash) PSetEX(key string, milliseconds int, value string) error {
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: []string{"psetex", key, fmt.Sprintf("%d", milliseconds), value},
 	})
 	return err
@@ -343,7 +342,7 @@ func (u *Upstash) PSetEX(key string, milliseconds int, value string) error {
 //
 // https://redis.io/commands/set
 func (u *Upstash) Set(key string, value string) error {
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: []string{"set", key, value},
 	})
 	return err
@@ -366,7 +365,7 @@ func (u *Upstash) SetWithOptions(key string, value string, options SetOptions) e
 		body = append(body, "xx")
 	}
 
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: body,
 	})
 	if err != nil {
@@ -392,7 +391,7 @@ func (u *Upstash) SetWithOptions(key string, value string, options SetOptions) e
 // https://redis.io/commands/setex
 func (u *Upstash) SetEX(key string, seconds int, value string) error {
 
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: []string{"setex", key, fmt.Sprintf("%d", seconds), value},
 	})
 	return err
@@ -410,7 +409,7 @@ func (u *Upstash) SetEX(key string, seconds int, value string) error {
 // https://redis.io/commands/setnx
 func (u *Upstash) SetNX(key string, value string) (int, error) {
 
-	res, err := u.client.Call(client.Request{
+	res, err := u.client.Write(client.Request{
 		Body: []string{"setnx", key, value},
 	})
 	return int(res.(float64)), err
@@ -443,7 +442,7 @@ func (u *Upstash) SetNX(key string, value string) (int, error) {
 // https://redis.io/commands/setrange
 func (u *Upstash) SetRange(key string, offset int, value string) error {
 
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: []string{"setrange", key, fmt.Sprintf("%d", offset), value},
 	})
 	return err
@@ -457,8 +456,8 @@ func (u *Upstash) SetRange(key string, offset int, value string) error {
 //
 // https://redis.io/commands/strlen
 func (u *Upstash) StrLen(key string) (int, error) {
-	res, err := u.client.Call(client.Request{
-		Body: []string{"strlen", key},
+	res, err := u.client.Read(client.Request{
+		Path: []string{"strlen", key},
 	})
 
 	return int(res.(float64)), err
@@ -467,7 +466,7 @@ func (u *Upstash) StrLen(key string) (int, error) {
 // Delete all the keys of all the existing databases, not just the currently
 // selected one.
 func (u *Upstash) FlushAll() error {
-	_, err := u.client.Call(client.Request{
+	_, err := u.client.Write(client.Request{
 		Body: []string{"flushall"},
 	})
 	return err
