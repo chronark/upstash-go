@@ -11,6 +11,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestKeys(t *testing.T) {
+	key := uuid.NewString()
+	value := uuid.NewString()
+	u, _ := upstash.New(upstash.Options{})
+
+	err := u.Set(key, value)
+	require.NoError(t, err)
+
+	keys, err := u.Keys(key)
+	require.NoError(t, err)
+	require.Equal(t, []string{key}, keys)
+
+}
+
 func TestAppend(t *testing.T) {
 	key := uuid.NewString()
 	value := uuid.NewString()
